@@ -1,0 +1,30 @@
+name: Build MIDI Forge
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (downloads JUCE)
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build VST3 + standalone app
+        run: cmake --build build --config Release --parallel
+
+      - name: Collect files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item -Recurse "build/MidiForge_artefacts/Release/VST3/MIDI Forge.vst3" out/
+          Copy-Item "build/MidiForge_artefacts/Release/Standalone/MIDI Forge.exe" out/
+          Copy-Item README.md out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MIDI-Forge-Windows
+          path: out
